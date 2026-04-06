@@ -1,0 +1,22 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 60s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files: []
+
+scrape_configs:
+  # Host metrics via node_exporter
+  # Install node_exporter on your hosts and add their addresses here
+  - job_name: "node"
+    static_configs:
+      - targets: ["host.docker.internal:9100"]
+
+  # Container metrics via cAdvisor
+  - job_name: "cadvisor"
+    static_configs:
+      - targets: ["cadvisor:8080"]

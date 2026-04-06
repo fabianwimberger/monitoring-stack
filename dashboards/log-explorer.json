@@ -1,0 +1,76 @@
+{
+  "title": "Loki Log Explorer",
+  "uid": "loki-log-explorer",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": { "from": "now-24h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "loki",
+        "label": "Datasource"
+      },
+      {
+        "name": "source",
+        "type": "query",
+        "datasource": { "type": "loki", "uid": "${datasource}" },
+        "query": "label_values(job)",
+        "label": "Source",
+        "includeAll": false,
+        "multi": false,
+        "refresh": 1,
+        "sort": 1
+      },
+      {
+        "name": "container",
+        "type": "query",
+        "datasource": { "type": "loki", "uid": "${datasource}" },
+        "query": "label_values({job=\"$source\"}, container)",
+        "label": "Container",
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": false,
+        "refresh": 1,
+        "sort": 1
+      },
+      {
+        "name": "search",
+        "type": "textbox",
+        "label": "Filter (regex)",
+        "current": { "text": "", "value": "" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Log Volume",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "type": "loki", "uid": "${datasource}" },
+      "targets": [{
+        "expr": "sum by (job) (count_over_time({job=\"$source\", container=~\"$container\"} |~ \"$search\" [$__interval]))",
+        "refId": "A"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "bars", "fillOpacity": 50, "stacking": { "mode": "normal" } }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "logs",
+      "title": "Logs",
+      "gridPos": { "h": 18, "w": 24, "x": 0, "y": 6 },
+      "datasource": { "type": "loki", "uid": "${datasource}" },
+      "targets": [{
+        "expr": "{job=\"$source\", container=~\"$container\"} |~ \"$search\"",
+        "refId": "A"
+      }],
+      "options": { "showTime": true, "wrapLogMessage": true, "sortOrder": "Descending" }
+    }
+  ]
+}

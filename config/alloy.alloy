@@ -1,0 +1,51 @@
+discovery.docker "docker" {
+	host             = "unix:///var/run/docker.sock"
+	refresh_interval = "10s"
+}
+
+discovery.relabel "docker" {
+	targets = discovery.docker.docker.targets
+
+	rule {
+		source_labels = ["__meta_docker_container_name"]
+		regex         = "/(.*)"
+		target_label  = "container"
+	}
+
+	rule {
+		target_label = "job"
+		replacement  = "docker"
+	}
+
+	// Drop logs from monitoring stack containers to avoid feedback loops
+	rule {
+		source_labels = ["__meta_docker_container_name"]
+		regex         = "/(loki|grafana|alloy).*"
+		action        = "drop"
+	}
+}
+
+loki.source.docker "docker" {
+	host             = "unix:///var/run/docker.sock"
+	targets          = discovery.docker.docker.targets
+	forward_to       = [loki.write.default.receiver]
+	relabel_rules    = discovery.relabel.docker.rules
+	refresh_interval = "10s"
+}
+
+loki.source.journal "systemd" {
+	max_age       = "12h0m0s"
+	path          = "/var/log/journal"
+	relabel_rules = null
+	forward_to    = [loki.write.default.receiver]
+	labels        = {
+		job = "systemd",
+	}
+}
+
+loki.write "default" {
+	endpoint {
+		url = "http://loki:3100/loki/api/v1/push"
+	}
+	external_labels = {}
+}

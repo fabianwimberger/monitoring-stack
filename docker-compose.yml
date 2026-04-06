@@ -1,0 +1,121 @@
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    user: nobody
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-UTC}
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--storage.tsdb.retention.time=${PROMETHEUS_RETENTION:-30d}'
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    user: "472"
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-UTC}
+      - GF_LOG_LEVEL=warn
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./dashboards:/etc/grafana/provisioning/dashboards:ro
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    networks:
+      - monitoring
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-UTC}
+    volumes:
+      - ./config/loki.yml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    networks:
+      - monitoring
+    command: -config.file=/etc/loki/local-config.yaml
+
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    restart: unless-stopped
+    user: root
+    environment:
+      - TZ=${TZ:-UTC}
+    volumes:
+      - ./config/alloy.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/log/journal:/var/log/journal:ro
+      - /etc/machine-id:/etc/machine-id:ro
+      - alloy-data:/var/lib/alloy
+    networks:
+      - monitoring
+    command: run /etc/alloy/config.alloy --storage.path=/var/lib/alloy
+    depends_on:
+      - loki
+
+  cadvisor:
+    image: ghcr.io/google/cadvisor:latest
+    container_name: cadvisor
+    privileged: true
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-UTC}
+    devices:
+      - /dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - monitoring
+    command:
+      - --docker_only=true
+      - --disable_root_cgroup_stats=true
+      - --global_housekeeping_interval=2m
+      - --housekeeping_interval=30s
+      - --max_housekeeping_interval=1m
+      - --allow_dynamic_housekeeping=true
+      - --store_container_labels=false
+      - --application_metrics_count_limit=10
+      - --enable_metrics=cpu,cpuLoad,memory,diskIO,network
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:2
+    container_name: uptime-kuma
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-UTC}
+    volumes:
+      - uptime-kuma-data:/app/data
+    ports:
+      - "${UPTIME_KUMA_PORT:-3001}:3001"
+    networks:
+      - monitoring
+
+volumes:
+  prometheus-data:
+  grafana-data:
+  loki-data:
+  alloy-data:
+  uptime-kuma-data:
+
+networks:
+  monitoring:
+    driver: bridge

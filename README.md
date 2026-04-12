@@ -1,8 +1,6 @@
 # Monitoring Stack
 
-[![CI](https://github.com/fabianwimberger/monitoring-stack/actions/workflows/ci.yml/badge.svg)](https://github.com/fabianwimberger/monitoring-stack/actions)
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/fabianwimberger/monitoring-stack/actions/workflows/ci.yml/badge.svg)](https://github.com/fabianwimberger/monitoring-stack/actions) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A batteries-included Docker Compose monitoring stack for self-hosted infrastructure.
 
@@ -60,7 +58,7 @@ Access the services:
 | Prometheus | [http://localhost:9090](http://localhost:9090) |
 | Uptime Kuma | [http://localhost:3001](http://localhost:3001) |
 
-Default Grafana credentials: `admin` / `admin`
+Default Grafana credentials: `admin` / `admin` (change via `GRAFANA_ADMIN_PASSWORD` env var)
 
 ## Configuration
 
@@ -73,6 +71,9 @@ All settings can be customized via `.env` (see [`.env.example`](.env.example)):
 | `PROMETHEUS_RETENTION` | `30d` | How long to keep metrics |
 | `GRAFANA_PORT` | `3000` | Grafana web UI port |
 | `UPTIME_KUMA_PORT` | `3001` | Uptime Kuma web UI port |
+| `GRAFANA_ADMIN_PASSWORD` | `admin` | Grafana admin password |
+
+> **Security Note:** Change `GRAFANA_ADMIN_PASSWORD` from the default `admin` in production.
 
 ### Adding Prometheus Scrape Targets
 
@@ -99,6 +100,10 @@ Drop Grafana dashboard JSON files into `dashboards/`. They are auto-provisioned 
 | **Alloy** | Log collection agent (Docker + systemd) |
 | **cAdvisor** | Container resource metrics |
 | **Uptime Kuma** | Uptime monitoring and status pages |
+
+### Alerting
+
+Alerting is currently out of scope for this basic stack. Prometheus is configured with empty `alertmanagers` and `rule_files`. To add alerting, edit `config/prometheus.yml` and configure Alertmanager.
 
 ## Requirements
 

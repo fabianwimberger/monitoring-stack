@@ -1,6 +1,6 @@
 services:
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.11.1
     container_name: prometheus
     user: nobody
     restart: unless-stopped
@@ -21,13 +21,14 @@ services:
       - monitoring
 
   grafana:
-    image: grafana/grafana-oss:latest
+    image: grafana/grafana-oss:12.4.2
     container_name: grafana
     user: "472"
     restart: unless-stopped
     environment:
       - TZ=${TZ:-UTC}
       - GF_LOG_LEVEL=warn
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
     volumes:
       - grafana-data:/var/lib/grafana
       - ./dashboards:/etc/grafana/provisioning/dashboards:ro
@@ -37,7 +38,7 @@ services:
       - monitoring
 
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:3.6.10
     container_name: loki
     restart: unless-stopped
     environment:
@@ -50,9 +51,10 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
 
   alloy:
-    image: grafana/alloy:latest
+    image: grafana/alloy:v1.15.0
     container_name: alloy
     restart: unless-stopped
+    # Runs as root to access Docker socket and systemd journal
     user: root
     environment:
       - TZ=${TZ:-UTC}
@@ -69,8 +71,9 @@ services:
       - loki
 
   cadvisor:
-    image: ghcr.io/google/cadvisor:latest
+    image: ghcr.io/google/cadvisor:v0.56.2
     container_name: cadvisor
+    # Privileged required for accessing host hardware metrics
     privileged: true
     restart: unless-stopped
     environment:

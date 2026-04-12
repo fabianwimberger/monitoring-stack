@@ -1,5 +1,7 @@
 # Monitoring Stack
 
+[![CI](https://github.com/fabianwimberger/monitoring-stack/actions/workflows/ci.yml/badge.svg)](https://github.com/fabianwimberger/monitoring-stack/actions)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A batteries-included Docker Compose monitoring stack for self-hosted infrastructure.

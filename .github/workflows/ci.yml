@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install linting tools
+        run: pip install yamllint
+
+      - name: Lint YAML files
+        run: |
+          yamllint -d relaxed config/ || true
+          yamllint -d relaxed docker-compose.yml || true
+
+      - name: Validate docker-compose.yml syntax
+        run: |
+          docker compose config > /dev/null
+
+  config-check:
+    name: Config Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Check Prometheus config exists
+        run: |
+          if [ ! -f "config/prometheus.yml" ]; then
+            echo "prometheus.yml not found"
+            exit 1
+          fi
+
+      - name: Check Loki config exists
+        run: |
+          if [ ! -f "config/loki.yml" ]; then
+            echo "loki.yml not found"
+            exit 1
+          fi
+
+      - name: Check Alloy config exists
+        run: |
+          if [ ! -f "config/alloy.alloy" ]; then
+            echo "alloy.alloy not found"
+            exit 1
+          fi
+
+      - name: Verify environment file example
+        run: |
+          if [ ! -f ".env.example" ]; then
+            echo ".env.example not found"
+            exit 1
+          fi
+
+  validate-compose:
+    name: Validate Compose
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Validate docker compose configuration
+        run: docker compose config

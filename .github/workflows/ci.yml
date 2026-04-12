@@ -28,8 +28,8 @@ jobs:
 
       - name: Lint YAML files
         run: |
-          yamllint -d relaxed config/ || true
-          yamllint -d relaxed docker-compose.yml || true
+          yamllint -d relaxed config/
+          yamllint -d relaxed docker-compose.yml
 
       - name: Validate docker-compose.yml syntax
         run: |

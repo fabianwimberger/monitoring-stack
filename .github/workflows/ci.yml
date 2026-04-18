@@ -30,10 +30,15 @@ jobs:
         run: |
           yamllint -d relaxed config/
           yamllint -d relaxed docker-compose.yml
+          yamllint -d relaxed docker-compose.proxy.yml
 
       - name: Validate docker-compose.yml syntax
         run: |
           docker compose config > /dev/null
+
+      - name: Validate docker-compose.proxy.yml syntax
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.proxy.yml config > /dev/null
 
   config-check:
     name: Config Check
@@ -81,3 +86,6 @@ jobs:
 
       - name: Validate docker compose configuration
         run: docker compose config
+
+      - name: Validate proxy overlay configuration
+        run: docker compose -f docker-compose.yml -f docker-compose.proxy.yml config

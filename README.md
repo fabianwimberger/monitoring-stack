@@ -2,114 +2,148 @@
 
 [![CI](https://github.com/fabianwimberger/monitoring-stack/actions/workflows/ci.yml/badge.svg)](https://github.com/fabianwimberger/monitoring-stack/actions) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A batteries-included Docker Compose monitoring stack for self-hosted infrastructure.
+A Docker Compose monitoring stack for self-hosted infrastructure. Metrics, logs, dashboards, and uptime monitoring in one command.
 
 - **Metrics** — Prometheus + cAdvisor + node_exporter
 - **Logs** — Loki + Grafana Alloy (Docker containers + systemd journal)
 - **Dashboards** — Grafana with pre-provisioned dashboards
 - **Uptime** — Uptime Kuma for endpoint monitoring
 
-## Why This Project?
-
-Setting up monitoring for a homelab or small server typically means stitching together multiple guides, debugging config file formats, and wiring services together manually. This project provides a single `docker compose up` that gives you a fully integrated monitoring stack with sensible defaults.
-
-**Goals:**
-- Single-command deployment with zero mandatory configuration
-- Cover the three pillars of observability: metrics, logs, and uptime
-- Pre-configured dashboards so you get value immediately
-- Easy to extend with additional scrape targets and exporters
-
 ## Architecture
 
-```
-┌─────────────┐     ┌──────────────┐     ┌────────────┐
-│ node_exporter│────▶│  Prometheus  │────▶│            │
-└─────────────┘     └──────────────┘     │            │
-┌─────────────┐            │             │  Grafana   │
-│  cAdvisor   │────────────┘             │            │
-└─────────────┘                          │            │
-┌─────────────┐     ┌──────────────┐     │            │
-│Docker + syslog────▶│ Alloy → Loki │────▶│            │
-└─────────────┘     └──────────────┘     └────────────┘
-┌─────────────┐
-│ Uptime Kuma │  (standalone uptime/status page)
-└─────────────┘
+```mermaid
+flowchart LR
+    subgraph Host
+        node[node_exporter]
+        cadvisor[cAdvisor]
+        journal[systemd journal]
+        docker[Docker logs]
+    end
+
+    subgraph Monitoring
+        prom[Prometheus]
+        loki[Loki]
+        alloy[Alloy]
+        grafana[Grafana]
+        kuma[Uptime Kuma]
+    end
+
+    node --> prom
+    cadvisor --> prom
+    docker --> alloy --> loki
+    journal --> alloy
+    prom --> grafana
+    loki --> grafana
 ```
 
 ## Quick Start
 
+### Option 1: Local / LAN
+
+For testing or running on your local network with direct port access:
+
 ```bash
-# Clone the repository
 git clone https://github.com/fabianwimberger/monitoring-stack.git
 cd monitoring-stack
 
-# (Optional) Customize settings
+# Optional: edit settings
 cp .env.example .env
 
-# Start the stack
+# Start
 make up
 ```
 
-Access the services:
-
 | Service | URL |
 |---|---|
-| Grafana | [http://localhost:3000](http://localhost:3000) |
-| Prometheus | [http://localhost:9090](http://localhost:9090) |
-| Uptime Kuma | [http://localhost:3001](http://localhost:3001) |
+| Grafana | http://localhost:3000 |
+| Prometheus | http://localhost:9090 |
+| Uptime Kuma | http://localhost:3001 |
 
-Default Grafana credentials: `admin` / `admin` (change via `GRAFANA_ADMIN_PASSWORD` env var)
+Default Grafana login: `admin` / `admin` (set `GRAFANA_ADMIN_PASSWORD` in `.env` to change).
+
+### Option 2: Behind a Reverse Proxy
+
+If you run [Traefik](https://traefik.io/) (or similar) already, use the proxy overlay:
+
+```bash
+cp .env.example .env
+# Edit .env and set your domains:
+#   GRAFANA_DOMAIN=grafana.example.com
+#   UPTIME_KUMA_DOMAIN=uptime.example.com
+
+make up-proxy
+```
+
+This exposes **only** Grafana and Uptime Kuma via your reverse proxy. Prometheus, Loki, Alloy, and cAdvisor stay on an isolated internal network with no public access.
+
+See `docker-compose.proxy.yml` if you use a different proxy — the labels are easy to adapt.
+
+## Network Isolation
+
+The compose setup uses two networks:
+
+- **`monitoring`** — internal communication between Prometheus, Loki, Alloy, and cAdvisor
+- **`proxy`** — for services that need external access (Grafana, Uptime Kuma)
+
+In proxy mode, backend services have no exposed ports and no route from the outside. Grafana and Uptime Kuma are the only entrypoints.
+
+## Screenshots
+
+*TODO: Add screenshots of the pre-provisioned dashboards here*
+
+- Host monitoring dashboard (CPU, memory, disk, network)
+- Log explorer (search across Docker containers and systemd journal)
+- Uptime Kuma status page
 
 ## Configuration
 
-All settings can be customized via `.env` (see [`.env.example`](.env.example)):
+All settings are via `.env` (see [`.env.example`](.env.example)):
 
 | Variable | Default | Description |
 |---|---|---|
 | `TZ` | `UTC` | Timezone for all services |
-| `PROMETHEUS_PORT` | `9090` | Prometheus web UI port |
-| `PROMETHEUS_RETENTION` | `30d` | How long to keep metrics |
-| `GRAFANA_PORT` | `3000` | Grafana web UI port |
-| `UPTIME_KUMA_PORT` | `3001` | Uptime Kuma web UI port |
+| `PROMETHEUS_PORT` | `9090` | Prometheus web UI port (local mode) |
+| `PROMETHEUS_RETENTION` | `30d` | Metrics retention |
+| `GRAFANA_PORT` | `3000` | Grafana web UI port (local mode) |
 | `GRAFANA_ADMIN_PASSWORD` | `admin` | Grafana admin password |
+| `UPTIME_KUMA_PORT` | `3001` | Uptime Kuma web UI port (local mode) |
+| `GRAFANA_DOMAIN` | — | Domain for Grafana (proxy mode) |
+| `UPTIME_KUMA_DOMAIN` | — | Domain for Uptime Kuma (proxy mode) |
+| `PROXY_NETWORK` | `proxy` | Name of your external Docker proxy network |
 
-> **Security Note:** Change `GRAFANA_ADMIN_PASSWORD` from the default `admin` in production.
+### Adding Hosts to Monitor
 
-### Adding Prometheus Scrape Targets
-
-Edit `config/prometheus.yml` and add targets under `scrape_configs`:
+Edit `config/prometheus.yml` and add your `node_exporter` instances:
 
 ```yaml
 scrape_configs:
-  - job_name: "my-app"
+  - job_name: "node"
     static_configs:
-      - targets: ["my-app-host:8080"]
+      - targets: ["192.168.1.10:9100", "192.168.1.11:9100"]
 ```
 
-### Adding More Dashboards
+### Adding Dashboards
 
 Drop Grafana dashboard JSON files into `dashboards/`. They are auto-provisioned on startup.
-
-## Services
-
-| Service | Purpose |
-|---|---|
-| **Prometheus** | Metrics collection and storage |
-| **Grafana** | Visualization and dashboards |
-| **Loki** | Log aggregation |
-| **Alloy** | Log collection agent (Docker + systemd) |
-| **cAdvisor** | Container resource metrics |
-| **Uptime Kuma** | Uptime monitoring and status pages |
-
-### Alerting
-
-Alerting is currently out of scope for this basic stack. Prometheus is configured with empty `alertmanagers` and `rule_files`. To add alerting, edit `config/prometheus.yml` and configure Alertmanager.
 
 ## Requirements
 
 - Docker and Docker Compose v2
 - Linux host (for systemd journal and cAdvisor access)
 - [node_exporter](https://github.com/prometheus/node_exporter) installed on hosts you want to monitor
+- For proxy mode: an existing reverse proxy (Traefik, Nginx, Caddy, etc.)
+
+## Makefile Commands
+
+| Command | Description |
+|---|---|
+| `make up` | Start stack (local mode) |
+| `make down` | Stop stack |
+| `make restart` | Restart all services |
+| `make logs` | Follow logs |
+| `make clean` | Stop and remove all volumes (**deletes data**) |
+| `make up-proxy` | Start stack behind reverse proxy |
+| `make down-proxy` | Stop proxy stack |
 
 ## License
 

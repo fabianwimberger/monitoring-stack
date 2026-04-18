@@ -1,4 +1,4 @@
-.PHONY: up down restart logs clean
+.PHONY: up down restart logs clean up-proxy down-proxy
 
 up:
 	@docker compose up -d
@@ -14,3 +14,9 @@ logs:
 
 clean:
 	@docker compose down -v
+
+up-proxy:
+	@docker compose -f docker-compose.yml -f docker-compose.proxy.yml up -d
+
+down-proxy:
+	@docker compose -f docker-compose.yml -f docker-compose.proxy.yml down

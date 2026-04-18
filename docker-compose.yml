@@ -36,6 +36,7 @@ services:
       - "${GRAFANA_PORT:-3000}:3000"
     networks:
       - monitoring
+      - proxy
 
   loki:
     image: grafana/loki:3.6.10
@@ -111,6 +112,7 @@ services:
       - "${UPTIME_KUMA_PORT:-3001}:3001"
     networks:
       - monitoring
+      - proxy
 
 volumes:
   prometheus-data:
@@ -121,4 +123,6 @@ volumes:
 
 networks:
   monitoring:
+    driver: bridge
+  proxy:
     driver: bridge

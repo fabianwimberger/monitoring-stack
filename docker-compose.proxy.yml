@@ -1,0 +1,44 @@
+# Overlay for running behind a reverse proxy (Traefik).
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.proxy.yml up -d
+#
+# Assumes you have a Traefik instance running on a Docker network
+# named "proxy" (change PROXY_NETWORK in .env if yours differs).
+
+services:
+  prometheus:
+    ports: !reset []
+    networks:
+      - monitoring
+
+  grafana:
+    ports: !reset []
+    networks:
+      - monitoring
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.grafana.rule=Host(`${GRAFANA_DOMAIN}`)
+      - traefik.http.routers.grafana.entrypoints=websecure
+      - traefik.http.routers.grafana.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}
+      - traefik.http.services.grafana.loadbalancer.server.port=3000
+      - traefik.docker.network=${PROXY_NETWORK:-proxy}
+
+  uptime-kuma:
+    ports: !reset []
+    networks:
+      - monitoring
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.uptime-kuma.rule=Host(`${UPTIME_KUMA_DOMAIN}`)
+      - traefik.http.routers.uptime-kuma.entrypoints=websecure
+      - traefik.http.routers.uptime-kuma.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}
+      - traefik.http.services.uptime-kuma.loadbalancer.server.port=3001
+      - traefik.docker.network=${PROXY_NETWORK:-proxy}
+
+networks:
+  proxy:
+    external: true
+    name: ${PROXY_NETWORK:-proxy}

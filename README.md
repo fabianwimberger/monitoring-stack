@@ -94,11 +94,20 @@ In proxy mode, backend services have no exposed ports and no route from the outs
 
 ## Screenshots
 
-*TODO: Add screenshots of the pre-provisioned dashboards here*
+<p align="center">
+  <img src="assets/host-dashboard.png" width="100%" alt="Host monitoring dashboard">
+  <br><em>Host monitoring dashboard — CPU, memory, disk, network</em>
+</p>
 
-- Host monitoring dashboard (CPU, memory, disk, network)
-- Log explorer (search across Docker containers and systemd journal)
-- Uptime Kuma status page
+<p align="center">
+  <img src="assets/log-explorer.png" width="100%" alt="Log explorer">
+  <br><em>Log explorer — search across Docker containers and systemd journal</em>
+</p>
+
+<p align="center">
+  <img src="assets/cadvisor.png" width="100%" alt="cAdvisor container metrics">
+  <br><em>cAdvisor container metrics — per-container CPU, memory, network, and disk I/O</em>
+</p>
 
 ## Configuration
 

@@ -12,7 +12,24 @@ A Docker Compose monitoring stack for self-hosted infrastructure. Metrics, logs,
 
 ## Background
 
-I kept setting up the same Prometheus, Grafana, and Loki combination on every self-hosted box. This is that stack packaged as one command, with the pieces I actually use: cAdvisor and node_exporter for metrics, Alloy for Docker and systemd-journal logs, Uptime Kuma for endpoint checks, and Grafana with dashboards already wired up.
+I kept setting up the same Prometheus, Grafana, and Loki combination on every
+self-hosted box. This is that stack packaged as one command, with the pieces I
+actually use: cAdvisor and node_exporter for metrics, Alloy for Docker and
+systemd-journal logs, Uptime Kuma for endpoint checks, and Grafana with
+dashboards already wired up.
+
+### Companion projects
+
+This stack is the dashboard layer. Two of my other repos plug straight into it
+as data sources:
+
+| Repo | What it provides | How this stack uses it |
+|---|---|---|
+| [openwrt-only-home-network](https://github.com/fabianwimberger/openwrt-only-home-network) | Whole-home OpenWrt WiFi blueprint (wired APs + WDS repeaters) | Each node runs `node_exporter`; this stack scrapes them and visualizes them in the bundled OpenWrt WiFi dashboard |
+| [fritzbox-monitoring](https://github.com/fabianwimberger/fritzbox-monitoring) | Prometheus exporter for AVM FritzBox cable modems (DOCSIS, speeds, ping) | Add its `:8000` target to `prometheus.yml` and import its Grafana dashboard |
+
+Neither is required — the stack works standalone — but if you run them, the
+integration is just a scrape-config edit.
 
 ## Architecture
 
@@ -135,6 +152,10 @@ scrape_configs:
     static_configs:
       - targets: ["192.168.1.10:9100", "192.168.1.11:9100"]
 ```
+
+The bundled `dashboards/openwrt-wifi-network.json` expects an `openwrt` job
+with a `node` label per device — see the commented template in
+`config/prometheus.yml`.
 
 ### Adding Dashboards
 

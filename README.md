@@ -126,6 +126,16 @@ In proxy mode, backend services have no exposed ports and no route from the outs
   <br><em>cAdvisor container metrics — per-container CPU, memory, network, and disk I/O</em>
 </p>
 
+<p align="center">
+  <img src="assets/openwrt-wifi-overview.png" width="100%" alt="OpenWrt WiFi overview">
+  <br><em>OpenWrt WiFi dashboard — per-AP status, client counts, backhaul signal, CPU/RAM, stations per AP, per-client signal</em>
+</p>
+
+<p align="center">
+  <img src="assets/openwrt-wifi-backhaul.png" width="100%" alt="OpenWrt WiFi backhaul and system metrics">
+  <br><em>OpenWrt WiFi dashboard — backhaul signal, bitrate and quality, plus per-node system and network metrics</em>
+</p>
+
 ## Configuration
 
 All settings are via `.env` (see [`.env.example`](.env.example)):

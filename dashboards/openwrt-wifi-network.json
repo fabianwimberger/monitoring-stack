@@ -574,8 +574,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "wifi_stations{job=\"openwrt\", node=~\"$node\", ifname!~\".*sta.*\"}",
-          "legendFormat": "{{node}} / {{ifname}}",
+          "expr": "sum by (node, band) (label_replace(label_replace(wifi_stations{job=\"openwrt\", node=~\"$node\", ifname!~\".*sta.*\"}, \"band\", \"2g\", \"ifname\", \"phy0-.*\"), \"band\", \"5g\", \"ifname\", \"phy1-.*\"))",
+          "legendFormat": "{{node}}-{{band}}",
           "editorMode": "code",
           "range": true
         }
@@ -672,15 +672,15 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "wifi_station_signal_dbm{job=\"openwrt\", node=~\"$node\", ifname!~\".*sta.*\"} * on(mac) group_left(name, ip) topk by (mac) (1, last_over_time(fritzbox_lan_host[5m]))",
-          "legendFormat": "{{node}} / {{name}} ({{ip}})",
+          "expr": "max by (mac, name, ip) (wifi_station_signal_dbm{job=\"openwrt\", node=~\"$node\", ifname!~\".*sta.*\"} * on(mac) group_left(name, ip) topk by (mac) (1, last_over_time(fritzbox_lan_host[5m])))",
+          "legendFormat": "{{name}} ({{ip}})",
           "editorMode": "code",
           "range": true
         },
         {
           "refId": "B",
-          "expr": "wifi_station_signal_dbm{job=\"openwrt\", node=~\"$node\", ifname!~\".*sta.*\"} unless on(mac) last_over_time(fritzbox_lan_host[5m])",
-          "legendFormat": "{{node}} / {{mac}}",
+          "expr": "max by (mac) (wifi_station_signal_dbm{job=\"openwrt\", node=~\"$node\", ifname!~\".*sta.*\"} unless on(mac) last_over_time(fritzbox_lan_host[5m]))",
+          "legendFormat": "{{mac}}",
           "editorMode": "code",
           "range": true
         }
@@ -1627,7 +1627,8 @@
               "__name__": true,
               "instance": true,
               "job": true,
-              "Time": true
+              "Time": true,
+              "ifname": true
             },
             "renameByName": {
               "Value": "Signal (dBm)"
@@ -1637,9 +1638,8 @@
               "ip": 1,
               "mac": 2,
               "node": 3,
-              "ifname": 4,
-              "band": 5,
-              "Value": 6
+              "band": 4,
+              "Value": 5
             }
           }
         },
@@ -1702,109 +1702,6 @@
           }
         ]
       }
-    },
-    {
-      "id": 14999,
-      "type": "table",
-      "title": "Bad-Signal Clients (<-70 dBm)",
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 44
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${ds_prometheus}"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "label_replace(label_replace(((wifi_station_signal_dbm{job=\"openwrt\", node=~\"$node\", ifname!~\".*sta.*\"} * on(mac) group_left(name, ip) topk by (mac) (1, last_over_time(fritzbox_lan_host[5m]))) or (wifi_station_signal_dbm{job=\"openwrt\", node=~\"$node\", ifname!~\".*sta.*\"} unless on(mac) fritzbox_lan_host)) < -70, \"band\", \"2.4 GHz\", \"ifname\", \"phy0-.*\"), \"band\", \"5 GHz\", \"ifname\", \"phy1-.*\")",
-          "legendFormat": "__auto",
-          "format": "table",
-          "instant": true,
-          "range": false,
-          "editorMode": "code",
-          "datasource": null
-        }
-      ],
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "__name__": true,
-              "instance": true,
-              "job": true,
-              "Time": true
-            },
-            "renameByName": {
-              "Value": "Signal (dBm)"
-            },
-            "indexByName": {
-              "name": 0,
-              "ip": 1,
-              "mac": 2,
-              "node": 3,
-              "ifname": 4,
-              "band": 5,
-              "Value": 6
-            }
-          }
-        },
-        {
-          "id": "sortBy",
-          "options": {
-            "fields": [
-              {
-                "displayName": "Signal (dBm)",
-                "desc": false
-              }
-            ]
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "dBm"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Signal (dBm)"
-            },
-            "properties": [
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "red",
-                      "value": null
-                    },
-                    {
-                      "color": "yellow",
-                      "value": -75
-                    },
-                    {
-                      "color": "green",
-                      "value": -65
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "custom.displayMode",
-                "value": "color-background-solid"
-              }
-            ]
-          }
-        ]
-      },
-      "options": {}
     }
   ],
   "refresh": "30s",

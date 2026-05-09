@@ -106,7 +106,7 @@ services:
       - alloy-data:/var/lib/alloy
     networks:
       - monitoring
-    command: run /etc/alloy/config.alloy --storage.path=/var/lib/alloy
+    command: run /etc/alloy/config.alloy --storage.path=/var/lib/alloy --disable-reporting
     depends_on:
       loki:
         condition: service_started

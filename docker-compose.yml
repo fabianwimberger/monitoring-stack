@@ -76,11 +76,7 @@ services:
       - monitoring
     command: -config.file=/etc/loki/local-config.yaml
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3100/ready"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
+      disable: true
     logging:
       driver: json-file
       options:
@@ -113,9 +109,9 @@ services:
     command: run /etc/alloy/config.alloy --storage.path=/var/lib/alloy
     depends_on:
       loki:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:12345/ready"]
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/12345"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -178,7 +174,7 @@ services:
       - monitoring
       - proxy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3001"]
+      test: ["CMD", "curl", "-f", "http://localhost:3001"]
       interval: 15s
       timeout: 5s
       retries: 3

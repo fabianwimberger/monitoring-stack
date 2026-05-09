@@ -19,24 +19,49 @@ services:
       - "${PROMETHEUS_PORT:-9090}:9090"
     networks:
       - monitoring
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9090/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
 
   grafana:
     image: grafana/grafana-oss:12.4.2
     container_name: grafana
-    user: "472"
+    user: grafana
     restart: unless-stopped
     environment:
       - TZ=${TZ:-UTC}
       - GF_LOG_LEVEL=warn
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-changeme}
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./provisioning:/etc/grafana/provisioning:ro
+      - ./dashboards:/var/lib/grafana/dashboards:ro
     ports:
       - "${GRAFANA_PORT:-3000}:3000"
     networks:
       - monitoring
       - proxy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
 
   loki:
     image: grafana/loki:3.6.10
@@ -50,13 +75,27 @@ services:
     networks:
       - monitoring
     command: -config.file=/etc/loki/local-config.yaml
+    healthcheck:
+      disable: true
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
 
   alloy:
     image: grafana/alloy:v1.15.0
     container_name: alloy
     restart: unless-stopped
-    # Runs as root to access Docker socket and systemd journal
-    user: root
+    # Alloy needs access to the Docker socket and systemd journal.
+    # By default it runs as root for backward compatibility with journal
+    # access on most hosts. To drop privileges, set DOCKER_GID to your
+    # host's docker group ID and uncomment the user line below.
+    # user: "473:${DOCKER_GID:-0}"
+    group_add:
+      - "${DOCKER_GID:-0}"
+    cap_add:
+      - DAC_READ_SEARCH
     environment:
       - TZ=${TZ:-UTC}
     volumes:
@@ -69,7 +108,19 @@ services:
       - monitoring
     command: run /etc/alloy/config.alloy --storage.path=/var/lib/alloy --disable-reporting
     depends_on:
-      - loki
+      loki:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/12345"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
 
   cadvisor:
     image: ghcr.io/google/cadvisor:v0.56.2
@@ -94,14 +145,23 @@ services:
       - --disable_root_cgroup_stats=true
       - --global_housekeeping_interval=2m
       - --housekeeping_interval=30s
-      - --max_housekeeping_interval=1m
-      - --allow_dynamic_housekeeping=true
       - --store_container_labels=false
       - --application_metrics_count_limit=10
       - --enable_metrics=cpu,cpuLoad,memory,diskIO,network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
 
   uptime-kuma:
-    image: louislam/uptime-kuma:2
+    image: louislam/uptime-kuma:2.3.2
     container_name: uptime-kuma
     restart: unless-stopped
     environment:
@@ -113,6 +173,17 @@ services:
     networks:
       - monitoring
       - proxy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
 
 volumes:
   prometheus-data:

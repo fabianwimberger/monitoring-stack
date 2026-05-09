@@ -81,7 +81,7 @@ make up
 | Prometheus | http://localhost:9090 |
 | Uptime Kuma | http://localhost:3001 |
 
-Default Grafana login: `admin` / `admin` (set `GRAFANA_ADMIN_PASSWORD` in `.env` to change).
+Default Grafana login: `admin` / `changeme` (set `GRAFANA_ADMIN_PASSWORD` in `.env` to change).
 
 ### Option 2: Behind a Reverse Proxy
 
@@ -146,11 +146,14 @@ All settings are via `.env` (see [`.env.example`](.env.example)):
 | `PROMETHEUS_PORT` | `9090` | Prometheus web UI port (local mode) |
 | `PROMETHEUS_RETENTION` | `30d` | Metrics retention |
 | `GRAFANA_PORT` | `3000` | Grafana web UI port (local mode) |
-| `GRAFANA_ADMIN_PASSWORD` | `admin` | Grafana admin password |
+| `GRAFANA_ADMIN_PASSWORD` | `changeme` | Grafana admin password |
 | `UPTIME_KUMA_PORT` | `3001` | Uptime Kuma web UI port (local mode) |
 | `GRAFANA_DOMAIN` | — | Domain for Grafana (proxy mode) |
 | `UPTIME_KUMA_DOMAIN` | — | Domain for Uptime Kuma (proxy mode) |
 | `PROXY_NETWORK` | `proxy` | Name of your external Docker proxy network |
+
+Metrics are retained for 30 days by default. Logs are retained for 14 days in
+`config/loki.yml` because they usually use more disk space than metrics.
 
 ### Adding Hosts to Monitor
 
@@ -171,6 +174,36 @@ with a `node` label per device — see the commented template in
 
 Drop Grafana dashboard JSON files into `dashboards/`. They are auto-provisioned on startup.
 
+### Backup and Restore
+
+The stack stores data in named Docker volumes. Back up the volumes before
+upgrades or host moves:
+
+```bash
+docker run --rm \
+  -v monitoring-stack_prometheus-data:/prometheus:ro \
+  -v monitoring-stack_grafana-data:/grafana:ro \
+  -v monitoring-stack_loki-data:/loki:ro \
+  -v monitoring-stack_alloy-data:/alloy:ro \
+  -v monitoring-stack_uptime-kuma-data:/uptime-kuma:ro \
+  -v "$PWD/backups":/backup \
+  alpine tar czf /backup/monitoring-stack-volumes.tgz \
+    prometheus grafana loki alloy uptime-kuma
+```
+
+Restore into an empty stack:
+
+```bash
+docker run --rm \
+  -v monitoring-stack_prometheus-data:/prometheus \
+  -v monitoring-stack_grafana-data:/grafana \
+  -v monitoring-stack_loki-data:/loki \
+  -v monitoring-stack_alloy-data:/alloy \
+  -v monitoring-stack_uptime-kuma-data:/uptime-kuma \
+  -v "$PWD/backups":/backup:ro \
+  alpine tar xzf /backup/monitoring-stack-volumes.tgz -C /
+```
+
 ## Requirements
 
 - Docker and Docker Compose v2
@@ -189,6 +222,12 @@ Drop Grafana dashboard JSON files into `dashboards/`. They are auto-provisioned 
 | `make clean` | Stop and remove all volumes (**deletes data**) |
 | `make up-proxy` | Start stack behind reverse proxy |
 | `make down-proxy` | Stop proxy stack |
+
+## Security Notes
+
+- **Alloy** runs with access to the Docker socket and systemd journal. The container uses `group_add` with `DOCKER_GID` (set in `.env`) so the process can access the Docker socket without full root privileges, and `cap_add: [DAC_READ_SEARCH]` helps with journal access. If you want to run fully unprivileged, set `DOCKER_GID` to your host's docker group ID and override the user in `docker-compose.yml`.
+- **cAdvisor** runs `privileged: true` to read host hardware metrics. This is required by cAdvisor's design.
+- All services include log rotation (`max-size: 10m`, `max-file: 3`) to prevent unbounded disk growth.
 
 ## License
 

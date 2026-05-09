@@ -20,7 +20,7 @@ discovery.relabel "docker" {
 	// Drop logs from monitoring stack containers to avoid feedback loops
 	rule {
 		source_labels = ["__meta_docker_container_name"]
-		regex         = "/(loki|grafana|alloy).*"
+		regex         = "/(loki|grafana|alloy|prometheus|cadvisor|uptime-kuma).*"
 		action        = "drop"
 	}
 }
@@ -47,5 +47,7 @@ loki.write "default" {
 	endpoint {
 		url = "http://loki:3100/loki/api/v1/push"
 	}
-	external_labels = {}
+	external_labels = {
+		host = env("HOSTNAME"),
+	}
 }

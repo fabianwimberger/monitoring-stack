@@ -2,11 +2,6 @@ global:
   scrape_interval: 15s
   evaluation_interval: 60s
 
-alerting:
-  alertmanagers:
-    - static_configs:
-        - targets: []
-
 rule_files: []
 
 scrape_configs:

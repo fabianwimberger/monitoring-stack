@@ -672,14 +672,14 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "max by (mac, name, ip) (wifi_station_signal_dbm{job=\"openwrt\", node=~\"$node\", ifname!~\".*sta.*\"} * on(mac) group_left(name, ip) topk by (mac) (1, last_over_time(fritzbox_lan_host[5m])))",
+          "expr": "max by (mac, name, ip) (wifi_station_signal_dbm{job=\"openwrt\", node=~\"$node\", ifname!~\".*sta.*\"} * on(mac) group_left(name, ip) topk by (mac) (1, 0 * last_over_time(fritzbox_lan_host{name=~\".+\"}[5m]) + 1))",
           "legendFormat": "{{name}} ({{ip}})",
           "editorMode": "code",
           "range": true
         },
         {
           "refId": "B",
-          "expr": "max by (mac) (wifi_station_signal_dbm{job=\"openwrt\", node=~\"$node\", ifname!~\".*sta.*\"} unless on(mac) last_over_time(fritzbox_lan_host[5m]))",
+          "expr": "max by (mac) (wifi_station_signal_dbm{job=\"openwrt\", node=~\"$node\", ifname!~\".*sta.*\"} unless on(mac) last_over_time(fritzbox_lan_host{name=~\".+\"}[5m]))",
           "legendFormat": "{{mac}}",
           "editorMode": "code",
           "range": true
@@ -1610,7 +1610,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "label_replace(label_replace((wifi_station_signal_dbm{job=\"openwrt\", node=~\"$node\", ifname!~\".*sta.*\"} * on(mac) group_left(name, ip) topk by (mac) (1, last_over_time(fritzbox_lan_host[5m]))) or (wifi_station_signal_dbm{job=\"openwrt\", node=~\"$node\", ifname!~\".*sta.*\"} unless on(mac) fritzbox_lan_host), \"band\", \"2.4 GHz\", \"ifname\", \"phy0-.*\"), \"band\", \"5 GHz\", \"ifname\", \"phy1-.*\")",
+          "expr": "label_replace(label_replace((wifi_station_signal_dbm{job=\"openwrt\", node=~\"$node\", ifname!~\".*sta.*\"} * on(mac) group_left(name, ip) topk by (mac) (1, 0 * last_over_time(fritzbox_lan_host{name=~\".+\"}[5m]) + 1)) or (wifi_station_signal_dbm{job=\"openwrt\", node=~\"$node\", ifname!~\".*sta.*\"} unless on(mac) fritzbox_lan_host{name=~\".+\"}), \"band\", \"2.4 GHz\", \"ifname\", \"phy0-.*\"), \"band\", \"5 GHz\", \"ifname\", \"phy1-.*\")",
           "legendFormat": "__auto",
           "format": "table",
           "instant": true,

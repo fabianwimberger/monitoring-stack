@@ -1,6 +1,6 @@
 services:
   prometheus:
-    image: prom/prometheus:v3.11.1
+    image: prom/prometheus:v3.11.3
     container_name: prometheus
     user: nobody
     restart: unless-stopped
@@ -34,7 +34,7 @@ services:
         max-file: "3"
 
   grafana:
-    image: grafana/grafana-oss:12.4.2
+    image: grafana/grafana-oss:13.0.1
     container_name: grafana
     user: grafana
     restart: unless-stopped
@@ -64,7 +64,7 @@ services:
         max-file: "3"
 
   loki:
-    image: grafana/loki:3.6.10
+    image: grafana/loki:3.7.1
     container_name: loki
     restart: unless-stopped
     environment:
@@ -84,7 +84,7 @@ services:
         max-file: "3"
 
   alloy:
-    image: grafana/alloy:v1.15.0
+    image: grafana/alloy:v1.16.1
     container_name: alloy
     restart: unless-stopped
     # Alloy needs access to the Docker socket and systemd journal.

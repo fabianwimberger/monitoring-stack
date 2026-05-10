@@ -12,8 +12,8 @@ updates:
       - "dependencies"
       - "github-actions"
 
-  # Docker images
-  - package-ecosystem: "docker"
+  # Docker Compose images
+  - package-ecosystem: "docker-compose"
     directory: "/"
     schedule:
       interval: "weekly"

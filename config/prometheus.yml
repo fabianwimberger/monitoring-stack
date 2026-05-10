@@ -21,12 +21,12 @@ scrape_configs:
   # OpenWrt dashboard's device dropdown.
   # - job_name: "openwrt"
   #   static_configs:
-  #     - targets: ["192.168.1.10:9100"]
+  #     - targets: ["198.51.100.10:9100"]
   #       labels:
   #         node: "ap-main"
-  #     - targets: ["192.168.1.11:9100"]
+  #     - targets: ["198.51.100.11:9100"]
   #       labels:
   #         node: "ap-upper"
-  #     - targets: ["192.168.1.20:9100"]
+  #     - targets: ["198.51.100.20:9100"]
   #       labels:
   #         node: "repeater-1"

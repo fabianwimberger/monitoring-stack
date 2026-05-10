@@ -163,7 +163,7 @@ Edit `config/prometheus.yml` and add your `node_exporter` instances:
 scrape_configs:
   - job_name: "node"
     static_configs:
-      - targets: ["198.51.100.10:9100", "198.51.100.11:9100"]
+      - targets: ["192.168.1.10:9100", "192.168.1.11:9100"]
 ```
 
 The bundled `dashboards/openwrt-wifi-network.json` expects an `openwrt` job

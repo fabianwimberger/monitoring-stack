@@ -4,8 +4,6 @@ services:
     container_name: prometheus
     user: nobody
     restart: unless-stopped
-    mem_limit: ${PROMETHEUS_MEM_LIMIT:-768m}
-    memswap_limit: ${PROMETHEUS_MEM_LIMIT:-768m}
     environment:
       - TZ=${TZ:-UTC}
     command:
@@ -40,8 +38,6 @@ services:
     container_name: grafana
     user: grafana
     restart: unless-stopped
-    mem_limit: ${GRAFANA_MEM_LIMIT:-2g}
-    memswap_limit: ${GRAFANA_MEM_LIMIT:-2g}
     environment:
       - TZ=${TZ:-UTC}
       - GF_LOG_LEVEL=warn
@@ -71,8 +67,6 @@ services:
     image: grafana/loki:3.7.1
     container_name: loki
     restart: unless-stopped
-    mem_limit: ${LOKI_MEM_LIMIT:-768m}
-    memswap_limit: ${LOKI_MEM_LIMIT:-768m}
     environment:
       - TZ=${TZ:-UTC}
     volumes:
@@ -93,8 +87,6 @@ services:
     image: grafana/alloy:v1.16.1
     container_name: alloy
     restart: unless-stopped
-    mem_limit: ${ALLOY_MEM_LIMIT:-1g}
-    memswap_limit: ${ALLOY_MEM_LIMIT:-1g}
     # Alloy needs access to the Docker socket and systemd journal.
     # By default it runs as root for backward compatibility with journal
     # access on most hosts. To drop privileges, set DOCKER_GID to your
@@ -136,8 +128,6 @@ services:
     # Privileged required for accessing host hardware metrics
     privileged: true
     restart: unless-stopped
-    mem_limit: ${CADVISOR_MEM_LIMIT:-256m}
-    memswap_limit: ${CADVISOR_MEM_LIMIT:-256m}
     environment:
       - TZ=${TZ:-UTC}
     devices:
@@ -174,8 +164,6 @@ services:
     image: louislam/uptime-kuma:2.3.2
     container_name: uptime-kuma
     restart: unless-stopped
-    mem_limit: ${UPTIME_KUMA_MEM_LIMIT:-512m}
-    memswap_limit: ${UPTIME_KUMA_MEM_LIMIT:-512m}
     environment:
       - TZ=${TZ:-UTC}
     volumes:

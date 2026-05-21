@@ -24,7 +24,6 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 47,
   "links": [
     {
       "icon": "external link",
@@ -2714,6 +2713,24 @@
           "range": true,
           "refId": "A",
           "step": 240
+        },
+        {
+          "editorMode": "code",
+          "expr": "rate(node_hwmon_energy_joules_total{instance=\"$node\",job=\"$job\"}[$__rate_interval]) * on(chip) group_left(chip_name) node_hwmon_chip_names{instance=\"$node\",job=\"$job\"}",
+          "format": "time_series",
+          "legendFormat": "{{ chip_name }} {{ sensor }}",
+          "range": true,
+          "refId": "B",
+          "step": 240
+        },
+        {
+          "editorMode": "code",
+          "expr": "rate(node_rapl_package_joules_total{instance=\"$node\",job=\"$job\"}[$__rate_interval])",
+          "format": "time_series",
+          "legendFormat": "RAPL {{ index }}",
+          "range": true,
+          "refId": "C",
+          "step": 240
         }
       ],
       "title": "Power Consumption",
@@ -2832,8 +2849,8 @@
     "list": [
       {
         "current": {
-          "text": "prometheus",
-          "value": "ddgnaoqxt70n4e"
+          "text": "Prometheus",
+          "value": "prometheus"
         },
         "includeAll": false,
         "label": "Datasource",
@@ -2845,10 +2862,7 @@
         "type": "datasource"
       },
       {
-        "current": {
-          "text": "node",
-          "value": "node"
-        },
+        "current": {},
         "datasource": {
           "type": "prometheus",
           "uid": "${ds_prometheus}"
@@ -2868,10 +2882,7 @@
         "type": "query"
       },
       {
-        "current": {
-          "text": "",
-          "value": ""
-        },
+        "current": {},
         "datasource": {
           "type": "prometheus",
           "uid": "${ds_prometheus}"
@@ -2891,10 +2902,7 @@
         "type": "query"
       },
       {
-        "current": {
-          "text": "",
-          "value": ""
-        },
+        "current": {},
         "datasource": {
           "type": "prometheus",
           "uid": "${ds_prometheus}"
@@ -2923,5 +2931,5 @@
   "timezone": "browser",
   "title": "Host Monitoring",
   "uid": "node-exporter-slim",
-  "version": 2
+  "version": 1
 }

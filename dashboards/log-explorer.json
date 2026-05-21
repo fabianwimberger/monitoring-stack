@@ -1,76 +1,129 @@
 {
-  "title": "Loki Log Explorer",
-  "uid": "loki-log-explorer",
-  "schemaVersion": 39,
+  "panels": [
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${ds_loki}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 50,
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        }
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "targets": [
+        {
+          "expr": "sum by (job) (count_over_time({job=\"$source\", container=~\"$container\"} |~ \"$search\" [$__interval]))",
+          "refId": "A"
+        }
+      ],
+      "title": "Log Volume",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${ds_loki}"
+      },
+      "gridPos": {
+        "h": 18,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "id": 2,
+      "options": {
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "expr": "{job=\"$source\", container=~\"$container\"} |~ \"$search\"",
+          "refId": "A"
+        }
+      ],
+      "title": "Logs",
+      "type": "logs"
+    }
+  ],
   "refresh": "30s",
-  "time": { "from": "now-24h", "to": "now" },
+  "schemaVersion": 39,
   "templating": {
     "list": [
       {
-        "name": "datasource",
-        "type": "datasource",
-        "query": "loki",
-        "label": "Datasource"
-      },
-      {
-        "name": "source",
-        "type": "query",
-        "datasource": { "type": "loki", "uid": "${datasource}" },
-        "query": "label_values(job)",
-        "label": "Source",
+        "current": {
+          "text": "Loki",
+          "value": "loki"
+        },
         "includeAll": false,
-        "multi": false,
+        "label": "Datasource",
+        "name": "ds_loki",
+        "options": [],
+        "query": "loki",
         "refresh": 1,
-        "sort": 1
+        "regex": "",
+        "type": "datasource"
       },
       {
-        "name": "container",
+        "datasource": {
+          "type": "loki",
+          "uid": "${ds_loki}"
+        },
+        "includeAll": false,
+        "label": "Source",
+        "multi": false,
+        "name": "source",
+        "query": "label_values(job)",
+        "refresh": 1,
+        "sort": 1,
         "type": "query",
-        "datasource": { "type": "loki", "uid": "${datasource}" },
-        "query": "label_values({job=\"$source\"}, container)",
-        "label": "Container",
-        "includeAll": true,
-        "allValue": ".*",
-        "multi": false,
-        "refresh": 1,
-        "sort": 1
+        "current": {}
       },
       {
-        "name": "search",
-        "type": "textbox",
+        "allValue": ".*",
+        "datasource": {
+          "type": "loki",
+          "uid": "${ds_loki}"
+        },
+        "includeAll": true,
+        "label": "Container",
+        "multi": false,
+        "name": "container",
+        "query": "label_values({job=\"$source\"}, container)",
+        "refresh": 1,
+        "sort": 1,
+        "type": "query",
+        "current": {}
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
         "label": "Filter (regex)",
-        "current": { "text": "", "value": "" }
+        "name": "search",
+        "type": "textbox"
       }
     ]
   },
-  "panels": [
-    {
-      "id": 1,
-      "type": "timeseries",
-      "title": "Log Volume",
-      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 0 },
-      "datasource": { "type": "loki", "uid": "${datasource}" },
-      "targets": [{
-        "expr": "sum by (job) (count_over_time({job=\"$source\", container=~\"$container\"} |~ \"$search\" [$__interval]))",
-        "refId": "A"
-      }],
-      "fieldConfig": {
-        "defaults": {
-          "custom": { "drawStyle": "bars", "fillOpacity": 50, "stacking": { "mode": "normal" } }
-        }
-      }
-    },
-    {
-      "id": 2,
-      "type": "logs",
-      "title": "Logs",
-      "gridPos": { "h": 18, "w": 24, "x": 0, "y": 6 },
-      "datasource": { "type": "loki", "uid": "${datasource}" },
-      "targets": [{
-        "expr": "{job=\"$source\", container=~\"$container\"} |~ \"$search\"",
-        "refId": "A"
-      }],
-      "options": { "showTime": true, "wrapLogMessage": true, "sortOrder": "Descending" }
-    }
-  ]
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "title": "Loki Log Explorer",
+  "uid": "loki-log-explorer",
+  "version": 1
 }

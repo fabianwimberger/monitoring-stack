@@ -26,7 +26,7 @@ as data sources:
 | Repo | What it provides | How this stack uses it |
 |---|---|---|
 | [openwrt-only-home-network](https://github.com/fabianwimberger/openwrt-only-home-network) | Whole-home OpenWrt WiFi blueprint (wired APs + WDS repeaters) | Each node runs `node_exporter`; this stack scrapes them and visualizes them in the bundled OpenWrt WiFi dashboard |
-| [fritzbox-monitoring](https://github.com/fabianwimberger/fritzbox-monitoring) | Prometheus exporter for AVM FritzBox cable modems (DOCSIS, speeds, ping) | Add its `:8000` target to `prometheus.yml` and import its Grafana dashboard |
+| [fritzbox-monitoring](https://github.com/fabianwimberger/fritzbox-monitoring) | Prometheus exporter for AVM FritzBox cable modems (DOCSIS, speeds, ping) | Add its `:8000` target to `prometheus.yml` and use the bundled FritzBox dashboard |
 
 Neither is required — the stack works standalone — but if you run them, the
 integration is just a scrape-config edit.

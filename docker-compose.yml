@@ -84,7 +84,7 @@ services:
         max-file: "3"
 
   alloy:
-    image: grafana/alloy:v1.18.1
+    image: grafana/alloy:v1.19.2
     container_name: alloy
     restart: unless-stopped
     # Alloy needs access to the Docker socket and systemd journal.

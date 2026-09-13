@@ -4,10 +4,11 @@ on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
 
 env:
   PYTHON_VERSION: "3.13"
+  PROMETHEUS_VERSION: "3.14.0"
 
 jobs:
   lint:
@@ -40,52 +41,27 @@ jobs:
         run: |
           docker compose -f docker-compose.yml -f docker-compose.proxy.yml config > /dev/null
 
-  config-check:
-    name: Config Check
+  validate:
+    name: Validate Config
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
 
-      - name: Check Prometheus config exists
+      - name: Validate Prometheus config
         run: |
-          if [ ! -f "config/prometheus.yml" ]; then
-            echo "prometheus.yml not found"
-            exit 1
-          fi
+          curl -sSL "https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS_VERSION}/prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz" | tar -xz
+          "./prometheus-${PROMETHEUS_VERSION}.linux-amd64/promtool" check config config/prometheus.yml
 
-      - name: Check Loki config exists
+      - name: Validate dashboards are valid JSON
         run: |
-          if [ ! -f "config/loki.yml" ]; then
-            echo "loki.yml not found"
-            exit 1
-          fi
+          for f in dashboards/*.json; do
+            jq empty "$f"
+          done
 
-      - name: Check Alloy config exists
+      - name: Check required files exist
         run: |
-          if [ ! -f "config/alloy.alloy" ]; then
-            echo "alloy.alloy not found"
-            exit 1
-          fi
-
-      - name: Verify environment file example
-        run: |
-          if [ ! -f ".env.example" ]; then
-            echo ".env.example not found"
-            exit 1
-          fi
-
-  validate-compose:
-    name: Validate Compose
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-
-      - name: Validate docker compose configuration
-        run: docker compose config
-
-      - name: Validate proxy overlay configuration
-        run: docker compose -f docker-compose.yml -f docker-compose.proxy.yml config
+          for f in config/prometheus.yml config/loki.yml config/alloy.alloy .env.example; do
+            test -f "$f" || { echo "$f not found"; exit 1; }
+          done

@@ -123,7 +123,7 @@ services:
         max-file: "3"
 
   cadvisor:
-    image: ghcr.io/google/cadvisor:latest
+    image: ghcr.io/google/cadvisor:v0.60.5
     container_name: cadvisor
     # Privileged required for accessing host hardware metrics
     privileged: true

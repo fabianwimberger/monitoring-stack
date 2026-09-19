@@ -5,7 +5,7 @@
 
 A Docker Compose monitoring stack for self-hosted infrastructure. Metrics, logs, dashboards, and uptime monitoring in one command.
 
-- **Metrics** — Prometheus + cAdvisor + node_exporter
+- **Metrics** — Prometheus + cAdvisor, plus external `node_exporter` targets
 - **Logs** — Loki + Grafana Alloy (Docker containers + systemd journal)
 - **Dashboards** — Grafana with pre-provisioned dashboards
 - **Uptime** — Uptime Kuma for endpoint monitoring
@@ -14,7 +14,8 @@ A Docker Compose monitoring stack for self-hosted infrastructure. Metrics, logs,
 
 I kept setting up the same Prometheus, Grafana, and Loki combination on every
 self-hosted box. This is that stack packaged as one command, with the pieces I
-actually use: cAdvisor and node_exporter for metrics, Alloy for Docker and
+actually use: cAdvisor for container metrics and `node_exporter` on the hosts
+for host metrics, Alloy for Docker and
 systemd-journal logs, Uptime Kuma for endpoint checks, and Grafana with
 dashboards already wired up.
 

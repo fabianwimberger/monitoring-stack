@@ -8,7 +8,6 @@ on:
 
 env:
   PYTHON_VERSION: "3.13"
-  PROMETHEUS_VERSION: "3.14.0"
 
 jobs:
   lint:
@@ -53,8 +52,17 @@ jobs:
 
       - name: Validate Prometheus config
         run: |
-          curl -sSL "https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS_VERSION}/prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz" | tar -xz
-          "./prometheus-${PROMETHEUS_VERSION}.linux-amd64/promtool" check config config/prometheus.yml
+          image=$(docker compose config --format json | jq -r '.services.prometheus.image')
+          docker run --rm --entrypoint /bin/promtool \
+            -v "$PWD/config:/etc/prometheus:ro" "$image" \
+            check config /etc/prometheus/prometheus.yml
+
+      - name: Validate Alloy config
+        run: |
+          image=$(docker compose config --format json | jq -r '.services.alloy.image')
+          docker run --rm \
+            -v "$PWD/config/alloy.alloy:/etc/alloy/config.alloy:ro" "$image" \
+            validate /etc/alloy/config.alloy
 
       - name: Validate dashboards are valid JSON
         run: |

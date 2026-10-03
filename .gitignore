@@ -1,6 +1,7 @@
 # Environment
 .env
 docker-compose.override.yml
+.venv/
 
 # IDE
 .vscode/

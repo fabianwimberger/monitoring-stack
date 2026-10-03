@@ -48,6 +48,6 @@ loki.write "default" {
 		url = "http://loki:3100/loki/api/v1/push"
 	}
 	external_labels = {
-		host = env("HOSTNAME"),
+		host = sys.env("HOSTNAME"),
 	}
 }

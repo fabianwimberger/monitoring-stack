@@ -25,13 +25,15 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install linting tools
-        run: pip install yamllint
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install --group dev
 
       - name: Lint YAML files
         run: |
-          yamllint -d relaxed config/
-          yamllint -d relaxed docker-compose.yml
-          yamllint -d relaxed docker-compose.proxy.yml
+          .venv/bin/python -m yamllint -d relaxed config/
+          .venv/bin/python -m yamllint -d relaxed docker-compose.yml
+          .venv/bin/python -m yamllint -d relaxed docker-compose.proxy.yml
 
       - name: Validate docker-compose.yml syntax
         run: |

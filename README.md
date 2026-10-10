@@ -5,11 +5,6 @@
 
 A Docker Compose monitoring stack for self-hosted infrastructure. Metrics, logs, dashboards, and uptime monitoring in one command.
 
-- **Metrics** — Prometheus + cAdvisor, plus external `node_exporter` targets
-- **Logs** — Loki + Grafana Alloy (Docker containers + systemd journal)
-- **Dashboards** — Grafana with pre-provisioned dashboards
-- **Uptime** — Uptime Kuma for endpoint monitoring
-
 ## Background
 
 I kept setting up the same Prometheus, Grafana, and Loki combination on every
@@ -32,32 +27,14 @@ as data sources:
 Neither is required — the stack works standalone — but if you run them, the
 integration is just a scrape-config edit.
 
-## Architecture
+## Features
 
-```mermaid
-flowchart LR
-    subgraph Host
-        node[node_exporter]
-        cadvisor[cAdvisor]
-        journal[systemd journal]
-        docker[Docker logs]
-    end
-
-    subgraph Monitoring
-        prom[Prometheus]
-        loki[Loki]
-        alloy[Alloy]
-        grafana[Grafana]
-        kuma[Uptime Kuma]
-    end
-
-    node --> prom
-    cadvisor --> prom
-    docker --> alloy --> loki
-    journal --> alloy
-    prom --> grafana
-    loki --> grafana
-```
+- **Metrics** — Prometheus + cAdvisor, plus external `node_exporter` targets
+- **Logs** — Loki + Grafana Alloy (Docker containers + systemd journal)
+- **Dashboards** — Grafana with pre-provisioned dashboards for hosts, containers, logs, Traefik, OpenWrt WiFi, and FritzBox cable
+- **Uptime** — Uptime Kuma for endpoint monitoring
+- **Proxy overlay** — optional compose file that exposes only Grafana and Uptime Kuma through an existing reverse proxy
+- **Network isolation** — Prometheus, Loki, Alloy, and cAdvisor stay on an internal network in proxy mode
 
 ## Quick Start
 
@@ -100,6 +77,33 @@ make up-proxy
 This exposes **only** Grafana and Uptime Kuma via your reverse proxy. Prometheus, Loki, Alloy, and cAdvisor stay on an isolated internal network with no public access.
 
 See `docker-compose.proxy.yml` if you use a different proxy — the labels are easy to adapt.
+
+## How It Works
+
+```mermaid
+flowchart LR
+    subgraph Host
+        node[node_exporter]
+        cadvisor[cAdvisor]
+        journal[systemd journal]
+        docker[Docker logs]
+    end
+
+    subgraph Monitoring
+        prom[Prometheus]
+        loki[Loki]
+        alloy[Alloy]
+        grafana[Grafana]
+        kuma[Uptime Kuma]
+    end
+
+    node --> prom
+    cadvisor --> prom
+    docker --> alloy --> loki
+    journal --> alloy
+    prom --> grafana
+    loki --> grafana
+```
 
 ## Network Isolation
 

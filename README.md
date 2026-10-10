@@ -5,19 +5,13 @@
 
 A Docker Compose monitoring stack for self-hosted infrastructure. Metrics, logs, dashboards, and uptime monitoring in one command.
 
-- **Metrics** — Prometheus + cAdvisor, plus external `node_exporter` targets
-- **Logs** — Loki + Grafana Alloy (Docker containers + systemd journal)
-- **Dashboards** — Grafana with pre-provisioned dashboards
-- **Uptime** — Uptime Kuma for endpoint monitoring
-
 ## Background
 
 I kept setting up the same Prometheus, Grafana, and Loki combination on every
 self-hosted box. This is that stack packaged as one command, with the pieces I
-actually use: cAdvisor for container metrics and `node_exporter` on the hosts
-for host metrics, Alloy for Docker and
-systemd-journal logs, Uptime Kuma for endpoint checks, and Grafana with
-dashboards already wired up.
+actually use: cAdvisor for container metrics, `node_exporter` on the hosts for
+host metrics, Alloy for Docker and systemd-journal logs, Uptime Kuma for
+endpoint checks, and Grafana with dashboards already wired up.
 
 ### Companion projects
 
@@ -32,32 +26,14 @@ as data sources:
 Neither is required — the stack works standalone — but if you run them, the
 integration is just a scrape-config edit.
 
-## Architecture
+## Features
 
-```mermaid
-flowchart LR
-    subgraph Host
-        node[node_exporter]
-        cadvisor[cAdvisor]
-        journal[systemd journal]
-        docker[Docker logs]
-    end
-
-    subgraph Monitoring
-        prom[Prometheus]
-        loki[Loki]
-        alloy[Alloy]
-        grafana[Grafana]
-        kuma[Uptime Kuma]
-    end
-
-    node --> prom
-    cadvisor --> prom
-    docker --> alloy --> loki
-    journal --> alloy
-    prom --> grafana
-    loki --> grafana
-```
+- **Metrics** — Prometheus + cAdvisor, plus external `node_exporter` targets
+- **Logs** — Loki + Grafana Alloy (Docker containers + systemd journal)
+- **Dashboards** — Grafana with pre-provisioned dashboards for hosts, containers, logs, Traefik, OpenWrt WiFi, and FritzBox cable
+- **Uptime** — Uptime Kuma for endpoint monitoring
+- **Proxy overlay** — optional compose file that exposes only Grafana and Uptime Kuma through an existing reverse proxy
+- **Network isolation** — Prometheus, Loki, Alloy, and cAdvisor stay on an internal network in proxy mode
 
 ## Quick Start
 
@@ -84,6 +60,8 @@ make up
 
 Default Grafana login: `admin` / `changeme` (set `GRAFANA_ADMIN_PASSWORD` in `.env` to change).
 
+`make down`, `make restart` and `make logs` do what they say; `make clean` also deletes the data volumes. Proxy mode has `make down-proxy`.
+
 ### Option 2: Behind a Reverse Proxy
 
 If you run [Traefik](https://traefik.io/) (or similar) already, use the proxy overlay:
@@ -97,18 +75,36 @@ cp .env.example .env
 make up-proxy
 ```
 
-This exposes **only** Grafana and Uptime Kuma via your reverse proxy. Prometheus, Loki, Alloy, and cAdvisor stay on an isolated internal network with no public access.
+This exposes only Grafana and Uptime Kuma, on the `proxy` network. Prometheus, Loki, Alloy, and cAdvisor stay on the internal `monitoring` network with no published ports.
 
 See `docker-compose.proxy.yml` if you use a different proxy — the labels are easy to adapt.
 
-## Network Isolation
+## How It Works
 
-The compose setup uses two networks:
+```mermaid
+flowchart LR
+    subgraph Host
+        node[node_exporter]
+        cadvisor[cAdvisor]
+        journal[systemd journal]
+        docker[Docker logs]
+    end
 
-- **`monitoring`** — internal communication between Prometheus, Loki, Alloy, and cAdvisor
-- **`proxy`** — for services that need external access (Grafana, Uptime Kuma)
+    subgraph Monitoring
+        prom[Prometheus]
+        loki[Loki]
+        alloy[Alloy]
+        grafana[Grafana]
+        kuma[Uptime Kuma]
+    end
 
-In proxy mode, backend services have no exposed ports and no route from the outside. Grafana and Uptime Kuma are the only entrypoints.
+    node --> prom
+    cadvisor --> prom
+    docker --> alloy --> loki
+    journal --> alloy
+    prom --> grafana
+    loki --> grafana
+```
 
 ## Screenshots
 
@@ -118,23 +114,8 @@ In proxy mode, backend services have no exposed ports and no route from the outs
 </p>
 
 <p align="center">
-  <img src="assets/log-explorer.png" width="100%" alt="Log explorer">
-  <br><em>Log explorer — search across Docker containers and systemd journal</em>
-</p>
-
-<p align="center">
-  <img src="assets/cadvisor.png" width="100%" alt="cAdvisor container metrics">
-  <br><em>cAdvisor container metrics — per-container CPU, memory, network, and disk I/O</em>
-</p>
-
-<p align="center">
   <img src="assets/openwrt-wifi-overview.png" width="100%" alt="OpenWrt WiFi overview">
   <br><em>OpenWrt WiFi dashboard — per-AP status, client counts, backhaul signal, CPU/RAM, stations per AP, per-client signal</em>
-</p>
-
-<p align="center">
-  <img src="assets/openwrt-wifi-backhaul.png" width="100%" alt="OpenWrt WiFi backhaul and system metrics">
-  <br><em>OpenWrt WiFi dashboard — backhaul signal, bitrate and quality, plus per-node system and network metrics</em>
 </p>
 
 ## Configuration
@@ -177,33 +158,7 @@ Drop Grafana dashboard JSON files into `dashboards/`. They are auto-provisioned 
 
 ### Backup and Restore
 
-The stack stores data in named Docker volumes. Back up the volumes before
-upgrades or host moves:
-
-```bash
-docker run --rm \
-  -v monitoring-stack_prometheus-data:/prometheus:ro \
-  -v monitoring-stack_grafana-data:/grafana:ro \
-  -v monitoring-stack_loki-data:/loki:ro \
-  -v monitoring-stack_alloy-data:/alloy:ro \
-  -v monitoring-stack_uptime-kuma-data:/uptime-kuma:ro \
-  -v "$PWD/backups":/backup \
-  alpine tar czf /backup/monitoring-stack-volumes.tgz \
-    prometheus grafana loki alloy uptime-kuma
-```
-
-Restore into an empty stack:
-
-```bash
-docker run --rm \
-  -v monitoring-stack_prometheus-data:/prometheus \
-  -v monitoring-stack_grafana-data:/grafana \
-  -v monitoring-stack_loki-data:/loki \
-  -v monitoring-stack_alloy-data:/alloy \
-  -v monitoring-stack_uptime-kuma-data:/uptime-kuma \
-  -v "$PWD/backups":/backup:ro \
-  alpine tar xzf /backup/monitoring-stack-volumes.tgz -C /
-```
+Data lives in named Docker volumes; [docs/backup.md](docs/backup.md) has the commands to archive and restore them.
 
 ## Requirements
 
@@ -211,18 +166,6 @@ docker run --rm \
 - Linux host (for systemd journal and cAdvisor access)
 - [node_exporter](https://github.com/prometheus/node_exporter) installed on hosts you want to monitor
 - For proxy mode: an existing reverse proxy (Traefik, Nginx, Caddy, etc.)
-
-## Makefile Commands
-
-| Command | Description |
-|---|---|
-| `make up` | Start stack (local mode) |
-| `make down` | Stop stack |
-| `make restart` | Restart all services |
-| `make logs` | Follow logs |
-| `make clean` | Stop and remove all volumes (**deletes data**) |
-| `make up-proxy` | Start stack behind reverse proxy |
-| `make down-proxy` | Stop proxy stack |
 
 ## Security Notes
 

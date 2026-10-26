@@ -19,9 +19,10 @@ services:
       - proxy
     labels:
       - traefik.enable=true
-      - traefik.http.routers.grafana.rule=Host(`${GRAFANA_DOMAIN}`)
       - traefik.http.routers.grafana.entrypoints=websecure
-      - traefik.http.routers.grafana.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}
+      - traefik.http.routers.grafana.rule=Host(`grafana.selfhosted.fabianwimberger.at`)
+      - traefik.http.routers.grafana.tls.certresolver=letsencrypt-tls
+      - traefik.http.routers.grafana.middlewares=only-local@docker
       - traefik.http.services.grafana.loadbalancer.server.port=3000
       - traefik.docker.network=${PROXY_NETWORK:-proxy}
 
@@ -32,9 +33,10 @@ services:
       - proxy
     labels:
       - traefik.enable=true
-      - traefik.http.routers.uptime-kuma.rule=Host(`${UPTIME_KUMA_DOMAIN}`)
       - traefik.http.routers.uptime-kuma.entrypoints=websecure
-      - traefik.http.routers.uptime-kuma.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}
+      - traefik.http.routers.uptime-kuma.rule=Host(`uptime-kuma.selfhosted.fabianwimberger.at`)
+      - traefik.http.routers.uptime-kuma.tls.certresolver=letsencrypt-tls
+      - traefik.http.routers.uptime-kuma.middlewares=only-local@docker
       - traefik.http.services.uptime-kuma.loadbalancer.server.port=3001
       - traefik.docker.network=${PROXY_NETWORK:-proxy}
 

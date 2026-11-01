@@ -1,0 +1,13 @@
+This repository ships one Grafana dashboard that was written by someone else.
+
+  dashboards/traefik.json
+    "Traefik Official Standalone Dashboard", Grafana dashboard 17346, revision 9
+    (c) Traefik Labs
+    https://grafana.com/grafana/dashboards/17346
+    https://github.com/traefik/traefik/tree/master/contrib/grafana
+    MIT License — https://github.com/traefik/traefik/blob/master/LICENSE.md
+
+Changed here: the local datasource and the container and host name filters, so the
+dashboard matches this stack's labels. Panels, queries and text are unchanged.
+
+The other dashboards in dashboards/ were written for this repository.

@@ -34,7 +34,7 @@ services:
         max-file: "3"
 
   grafana:
-    image: grafana/grafana:13.2.4
+    image: grafana/grafana:13.3.0
     container_name: grafana
     user: grafana
     restart: unless-stopped

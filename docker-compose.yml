@@ -34,7 +34,7 @@ services:
         max-file: "3"
 
   grafana:
-    image: grafana/grafana:13.2.4
+    image: grafana/grafana:13.3.0
     container_name: grafana
     user: grafana
     restart: unless-stopped
@@ -84,7 +84,7 @@ services:
         max-file: "3"
 
   alloy:
-    image: grafana/alloy:v1.21.2
+    image: grafana/alloy:v1.21.3
     container_name: alloy
     restart: unless-stopped
     # Alloy needs access to the Docker socket and systemd journal.
@@ -161,7 +161,7 @@ services:
         max-file: "3"
 
   uptime-kuma:
-    image: louislam/uptime-kuma:2.5.7
+    image: louislam/uptime-kuma:2.5.8
     container_name: uptime-kuma
     restart: unless-stopped
     environment:

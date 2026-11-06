@@ -5,6 +5,27 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.4.0] - 2026-11-06
+
+Quiets Grafana's startup warnings and brings every image up to date.
+
+### Features
+
+- `grafana/provisioning` ships the plugins and alerting directories, so Grafana no longer logs a missing-directory error on every start.
+
+### Dependencies
+
+- Prometheus 3.15.0 → 3.15.1.
+- Grafana 13.2.3 → 13.3.0.
+- Loki 3.7.8 → 3.7.9.
+- Grafana Alloy 1.20.1 → 1.21.3.
+- Uptime Kuma 2.5.5 → 2.5.8.
+
+### Documentation & Links
+
+- [README](https://github.com/fabianwimberger/monitoring-stack#readme)
+- [NOTICE](https://github.com/fabianwimberger/monitoring-stack/blob/main/NOTICE) records where the Traefik dashboard comes from.
+
 ## [v1.3.5] - 2026-10-03
 
 Updates Prometheus and Alloy and keeps configuration checks aligned with the selected container versions.

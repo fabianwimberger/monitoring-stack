@@ -176,3 +176,8 @@ Data lives in named Docker volumes; [docs/backup.md](docs/backup.md) has the com
 ## License
 
 [MIT](LICENSE)
+
+`dashboards/traefik.json` is the "Traefik Official Standalone Dashboard" (Grafana dashboard
+17346) by Traefik Labs, also MIT, adapted to this stack's datasource and labels. See
+[NOTICE](NOTICE) for the source and the changes; the other dashboards were written for this
+repository.

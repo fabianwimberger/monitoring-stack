@@ -64,7 +64,7 @@ services:
         max-file: "3"
 
   loki:
-    image: grafana/loki:3.7.9
+    image: grafana/loki:3.7.10
     container_name: loki
     restart: unless-stopped
     environment:
@@ -84,7 +84,7 @@ services:
         max-file: "3"
 
   alloy:
-    image: grafana/alloy:v1.21.3
+    image: grafana/alloy:v1.22.0
     container_name: alloy
     restart: unless-stopped
     # Alloy needs access to the Docker socket and systemd journal.
@@ -123,7 +123,7 @@ services:
         max-file: "3"
 
   cadvisor:
-    image: ghcr.io/google/cadvisor:v0.60.6
+    image: ghcr.io/google/cadvisor:v0.61.1
     container_name: cadvisor
     # Privileged required for accessing host hardware metrics
     privileged: true
@@ -161,7 +161,7 @@ services:
         max-file: "3"
 
   uptime-kuma:
-    image: louislam/uptime-kuma:2.5.11
+    image: louislam/uptime-kuma:2.5.12
     container_name: uptime-kuma
     restart: unless-stopped
     environment:

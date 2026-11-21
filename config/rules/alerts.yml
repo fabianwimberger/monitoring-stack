@@ -20,10 +20,12 @@ groups:
 
   - name: containers
     rules:
-      # cAdvisor drops a stopped container's series, so compare with the last six hours
+      # cAdvisor drops a stopped container's series, so compare with the last six
+      # hours. Only containers seen for at least an hour (360 samples at a 10 s
+      # scrape) count; throwaway `docker run --rm` containers come and go.
       - alert: ContainerMissing
         expr: |
-          count by (name, nodename) (last_over_time(container_last_seen{name!=""}[6h]))
+          count by (name, nodename) (count_over_time(container_last_seen{name!=""}[6h]) > 360)
             unless
           count by (name, nodename) (container_last_seen{name!=""})
         for: 3m

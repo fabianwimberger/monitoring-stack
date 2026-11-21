@@ -29,12 +29,12 @@ integration is just a scrape-config edit.
 ## Features
 
 - **Metrics** — Prometheus + cAdvisor, plus external `node_exporter` targets
-- **Logs** — Loki + Grafana Alloy (Docker containers + systemd journal)
+- **Logs** — Loki + Grafana Alloy (Docker containers, systemd journal, and RFC3164 syslog over UDP, e.g. from OpenWrt)
 - **Dashboards** — Grafana with pre-provisioned dashboards for hosts, containers, logs, Traefik, OpenWrt WiFi, and FritzBox cable
 - **Alerts** — Prometheus rules for down targets, missing or restarting containers, disk space, OpenWrt wired links and backup age, routed through Alertmanager
 - **Uptime** — Uptime Kuma for endpoint monitoring
 - **Proxy overlay** — optional compose file that exposes only Grafana and Uptime Kuma through an existing reverse proxy
-- **Network isolation** — Prometheus, Loki, Alloy, and cAdvisor stay on an internal network in proxy mode
+- **Network isolation** — Prometheus, Loki, and cAdvisor stay on an internal network in proxy mode
 
 ## Quick Start
 
@@ -58,6 +58,7 @@ make up
 | Grafana | http://localhost:3000 |
 | Prometheus | http://localhost:9090 |
 | Uptime Kuma | http://localhost:3001 |
+| Syslog | udp/514 (`SYSLOG_PORT`), labelled `job="openwrt"` |
 
 Default Grafana login: `admin` / `changeme` (set `GRAFANA_ADMIN_PASSWORD` in `.env` to change).
 
@@ -76,7 +77,7 @@ cp .env.example .env
 make up-proxy
 ```
 
-This exposes only Grafana and Uptime Kuma, on the `proxy` network. Prometheus, Loki, Alloy, and cAdvisor stay on the internal `monitoring` network with no published ports.
+This exposes only Grafana and Uptime Kuma, on the `proxy` network. Prometheus, Loki, and cAdvisor stay on the internal `monitoring` network with no published ports; Alloy only publishes the UDP syslog port (`SYSLOG_PORT`, default 514).
 
 See `docker-compose.proxy.yml` if you use a different proxy — the labels are easy to adapt.
 

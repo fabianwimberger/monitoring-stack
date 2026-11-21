@@ -31,6 +31,7 @@ integration is just a scrape-config edit.
 - **Metrics** — Prometheus + cAdvisor, plus external `node_exporter` targets
 - **Logs** — Loki + Grafana Alloy (Docker containers + systemd journal)
 - **Dashboards** — Grafana with pre-provisioned dashboards for hosts, containers, logs, Traefik, OpenWrt WiFi, and FritzBox cable
+- **Alerts** — Prometheus rules for down targets, missing or restarting containers, disk space, OpenWrt wired links and backup age, routed through Alertmanager
 - **Uptime** — Uptime Kuma for endpoint monitoring
 - **Proxy overlay** — optional compose file that exposes only Grafana and Uptime Kuma through an existing reverse proxy
 - **Network isolation** — Prometheus, Loki, Alloy, and cAdvisor stay on an internal network in proxy mode
@@ -96,6 +97,7 @@ flowchart LR
         alloy[Alloy]
         grafana[Grafana]
         kuma[Uptime Kuma]
+        am[Alertmanager]
     end
 
     node --> prom
@@ -103,6 +105,7 @@ flowchart LR
     docker --> alloy --> loki
     journal --> alloy
     prom --> grafana
+    prom --> am
     loki --> grafana
 ```
 
@@ -151,6 +154,12 @@ scrape_configs:
 The bundled `dashboards/openwrt-wifi-network.json` expects an `openwrt` job
 with a `node` label per device — see the commented template in
 `config/prometheus.yml`.
+
+### Alerts
+
+`config/rules/alerts.yml` holds the alert rules and `tests/alerts.test.yml` their unit tests (`promtool test rules tests/alerts.test.yml`). Prometheus sends firing alerts to Alertmanager, which groups them and repeats an open one every 12 hours. `config/alertmanager.yml` ships a receiver without an integration; copy the file, uncomment the Telegram block (or use any other [receiver](https://prometheus.io/docs/alerting/latest/configuration/#receiver-integration-settings)) and mount your copy over it. A scrape target with the label `optional: "true"` never raises `TargetDown`.
+
+The backup rules read `backup_*` metrics that a script writes to node_exporter's textfile collector; without them those three rules stay silent.
 
 ### Adding Dashboards
 

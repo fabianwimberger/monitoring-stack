@@ -1,0 +1,96 @@
+rule_files:
+  - ../config/rules/alerts.yml
+
+evaluation_interval: 1m
+
+tests:
+  - interval: 1m
+    input_series:
+      - series: 'up{job="node", instance="a:9100"}'
+        values: '0x10'
+      - series: 'up{job="node", instance="laptop:9100", optional="true"}'
+        values: '0x10'
+      - series: 'up{job="openwrt", instance="ap:9100", node="ap-main"}'
+        values: '0x10'
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: TargetDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              job: node
+              instance: "a:9100"
+            exp_annotations:
+              summary: "node target a:9100 is down"
+      - eval_time: 4m
+        alertname: OpenWrtNodeDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              job: openwrt
+              instance: "ap:9100"
+              node: ap-main
+            exp_annotations:
+              summary: "OpenWrt node ap-main (ap:9100) is down"
+
+  - interval: 1m
+    input_series:
+      - series: 'container_last_seen{name="gone", nodename="local", id="/a"}'
+        values: '1x10 _x20'
+      - series: 'container_last_seen{name="kept", nodename="local", id="/b"}'
+        values: '1x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: ContainerMissing
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              name: gone
+              nodename: local
+            exp_annotations:
+              summary: "Container gone on local is gone"
+
+  - interval: 1m
+    input_series:
+      - series: 'node_network_carrier_changes_total{job="openwrt", device="eth0", node="ap-main"}'
+        values: '3 3 3 4 4 4'
+      - series: 'node_network_carrier_changes_total{job="openwrt", device="eth0", node="repeater-door"}'
+        values: '0 1 2 3 4 5'
+      - series: 'node_network_speed_bytes{job="openwrt", device="eth0", node="ap-upper"}'
+        values: '12500000x10'
+      - series: 'node_network_speed_bytes{job="openwrt", device="eth0", node="ap-main"}'
+        values: '312500000x10'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: WiredApLinkFlapping
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              job: openwrt
+              device: eth0
+              node: ap-main
+            exp_annotations:
+              summary: "ap-main: eth0 changed carrier 1 times in the last hour (a reboot counts too)"
+      - eval_time: 8m
+        alertname: WiredApLinkDegraded
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              job: openwrt
+              device: eth0
+              node: ap-upper
+            exp_annotations:
+              summary: "ap-upper: eth0 negotiated 12.5MB/s, below 2.5 Gbit/s"
+
+  - interval: 1m
+    input_series:
+      - series: 'backup_last_success_timestamp_seconds'
+        values: '1000x14400'
+    alert_rule_test:
+      - eval_time: 10d
+        alertname: BackupTooOld
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations:
+              summary: "Last successful backup is 9d 23h 43m 20s old"

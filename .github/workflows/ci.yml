@@ -78,3 +78,18 @@ jobs:
           for f in config/prometheus.yml config/loki.yml config/alloy.alloy .env.example; do
             test -f "$f" || { echo "$f not found"; exit 1; }
           done
+
+  ci:
+    name: ci
+    if: always()
+    needs: [lint, validate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every job to pass
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          case " $RESULTS " in
+            *" failure "*|*" cancelled "*) echo "A required job did not pass: $RESULTS"; exit 1 ;;
+          esac

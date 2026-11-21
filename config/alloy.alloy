@@ -43,6 +43,34 @@ loki.source.journal "systemd" {
 	}
 }
 
+// OpenWrt logd forwards RFC3164 over UDP.
+loki.relabel "syslog" {
+	forward_to = []
+
+	rule {
+		source_labels = ["__syslog_message_hostname"]
+		target_label  = "host"
+	}
+
+	rule {
+		source_labels = ["__syslog_message_app_name"]
+		target_label  = "app"
+	}
+}
+
+loki.source.syslog "openwrt" {
+	listener {
+		address       = "0.0.0.0:514"
+		protocol      = "udp"
+		syslog_format = "rfc3164"
+		labels        = {
+			job = "openwrt",
+		}
+	}
+	relabel_rules = loki.relabel.syslog.rules
+	forward_to    = [loki.write.default.receiver]
+}
+
 loki.write "default" {
 	endpoint {
 		url = "http://loki:3100/loki/api/v1/push"

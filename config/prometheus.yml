@@ -32,3 +32,13 @@ scrape_configs:
   #     - targets: ["192.168.1.20:9100"]
   #       labels:
   #         node: "repeater-1"
+  #   A repeater's uplink station shows up under its radio MAC, which the
+  #   router's host list never sees, so the dashboard cannot name it or give
+  #   it an IP. Rewrite each repeater's STA radio MAC to an address the router
+  #   knows (its Ethernet MAC) and the uplink series joins names and IPs like
+  #   any client. STA MACs change when an uplink moves to another radio.
+  #   metric_relabel_configs:
+  #     - source_labels: [mac]
+  #       regex: "AA:BB:CC:DD:EE:01" # repeater-1 radio STA MAC
+  #       target_label: mac
+  #       replacement: "AA:BB:CC:DD:EE:00" # repeater-1 Ethernet MAC

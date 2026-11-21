@@ -14,7 +14,6 @@ services:
       - '--storage.tsdb.retention.time=${PROMETHEUS_RETENTION:-30d}'
     volumes:
       - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ./config/rules:/etc/prometheus/rules:ro
       - prometheus-data:/prometheus
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"
@@ -24,32 +23,6 @@ services:
       - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:9090/-/healthy"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    logging:
-      driver: json-file
-      options:
-        max-size: 10m
-        max-file: "3"
-
-  alertmanager:
-    image: prom/alertmanager:v0.35.0
-    container_name: alertmanager
-    restart: unless-stopped
-    environment:
-      - TZ=${TZ:-UTC}
-    command:
-      - '--config.file=/etc/alertmanager/alertmanager.yml'
-      - '--storage.path=/alertmanager'
-    volumes:
-      - ./config/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
-      - alertmanager-data:/alertmanager
-    networks:
-      - monitoring
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:9093/-/healthy"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -216,7 +189,6 @@ services:
 
 volumes:
   prometheus-data:
-  alertmanager-data:
   grafana-data:
   loki-data:
   alloy-data:

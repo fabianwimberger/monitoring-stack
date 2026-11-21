@@ -33,7 +33,7 @@ jobs:
 
       - name: Lint YAML files
         run: |
-          .venv/bin/python -m yamllint -d relaxed config/ tests/
+          .venv/bin/python -m yamllint -d relaxed config/
           .venv/bin/python -m yamllint -d relaxed docker-compose.yml
           .venv/bin/python -m yamllint -d relaxed docker-compose.proxy.yml
 
@@ -60,23 +60,6 @@ jobs:
             -v "$PWD/config:/etc/prometheus:ro" "$image" \
             check config /etc/prometheus/prometheus.yml
 
-      - name: Validate alert rules
-        run: |
-          image=$(docker compose config --format json | jq -r '.services.prometheus.image')
-          docker run --rm --entrypoint /bin/promtool \
-            -v "$PWD:/w:ro" "$image" \
-            check rules /w/config/rules/alerts.yml
-          docker run --rm --entrypoint /bin/promtool \
-            -v "$PWD:/w:ro" "$image" \
-            test rules /w/tests/alerts.test.yml
-
-      - name: Validate Alertmanager config
-        run: |
-          image=$(docker compose config --format json | jq -r '.services.alertmanager.image')
-          docker run --rm --entrypoint /bin/amtool \
-            -v "$PWD/config:/etc/alertmanager:ro" "$image" \
-            check-config /etc/alertmanager/alertmanager.yml
-
       - name: Validate Alloy config
         run: |
           image=$(docker compose config --format json | jq -r '.services.alloy.image')
@@ -92,7 +75,7 @@ jobs:
 
       - name: Check required files exist
         run: |
-          for f in config/prometheus.yml config/alertmanager.yml config/rules/alerts.yml config/loki.yml config/alloy.alloy .env.example; do
+          for f in config/prometheus.yml config/loki.yml config/alloy.alloy .env.example; do
             test -f "$f" || { echo "$f not found"; exit 1; }
           done
 

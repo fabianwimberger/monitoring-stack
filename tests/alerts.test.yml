@@ -33,14 +33,16 @@ tests:
             exp_annotations:
               summary: "OpenWrt node ap-main (ap:9100) is down"
 
-  - interval: 1m
+  - interval: 10s
     input_series:
       - series: 'container_last_seen{name="gone", nodename="local", id="/a"}'
-        values: '1x10 _x20'
+        values: '1x2400 _x300'
       - series: 'container_last_seen{name="kept", nodename="local", id="/b"}'
-        values: '1x30'
+        values: '1x2700'
+      - series: 'container_last_seen{name="throwaway", nodename="local", id="/c"}'
+        values: '1x30 _x2670'
     alert_rule_test:
-      - eval_time: 20m
+      - eval_time: 410m
         alertname: ContainerMissing
         exp_alerts:
           - exp_labels:

@@ -131,6 +131,8 @@ services:
       - /var/log/journal:/var/log/journal:ro
       - /etc/machine-id:/etc/machine-id:ro
       - alloy-data:/var/lib/alloy
+    ports:
+      - "${SYSLOG_PORT:-514}:514/udp"
     networks:
       - monitoring
     command: run /etc/alloy/config.alloy --storage.path=/var/lib/alloy --disable-reporting

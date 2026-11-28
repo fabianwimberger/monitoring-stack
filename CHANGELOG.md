@@ -5,6 +5,32 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.5.0] - 2026-11-28
+
+OpenWrt access points can send their logs straight into Loki, and hovering a dashboard line now shows that line alone.
+
+### Features
+
+- Alloy listens for RFC3164 syslog over UDP on `SYSLOG_PORT` (default 514). Point OpenWrt's `logd` at the host and each message arrives labelled `job="openwrt"`, with the sender in `host` and the process in `app`.
+
+### Fixes
+
+- Time-series panels show only the hovered series in the tooltip instead of every series sorted by value.
+
+### Dependencies
+
+- Prometheus 3.15.1 → 3.16.0.
+- Grafana 13.3.0 → 13.3.1.
+- Loki 3.7.9 → 3.7.10.
+- Grafana Alloy 1.21.3 → 1.22.0.
+- cAdvisor 0.60.6 → 0.61.1.
+- Uptime Kuma 2.5.8 → 2.5.12.
+
+### Documentation & Links
+
+- [README](https://github.com/fabianwimberger/monitoring-stack#readme)
+- [NOTICE](https://github.com/fabianwimberger/monitoring-stack/blob/main/NOTICE) records where the Traefik dashboard comes from.
+
 ## [v1.4.0] - 2026-11-06
 
 Quiets Grafana's startup warnings and brings every image up to date.
